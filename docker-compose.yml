@@ -53,9 +53,30 @@ services:
     depends_on:
       - database
 
+  #
+  # mailhog
+  #
+  mailhog:
+    container_name: smtp
+    platform: linux/amd64
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MAIL_HOST: smtp
+      MAIL_PORT: 1025
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - mail_data:/tmp
+    networks:
+      - backend
+
 networks:
   backend: {}
 
 volumes:
   database_data: null
   phpmyadmin_data: null
+  mail_data: null
