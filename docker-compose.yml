@@ -1,0 +1,82 @@
+#
+# docker-compose.docker.yml ( in docker on local )
+#
+version: "3.9"
+services:
+  #
+  # database by MySQL
+  #
+  database:
+    container_name: database
+    hostname: ${DB_HOST}
+    image: mysql
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./database/initdb.d:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+    environment:
+      TZ: Asia/Tokyo
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    networks:
+      - backend
+    healthcheck:
+      test: mysqladmin ping -h0.0.0.0 -P3306 -u$$MYSQL_USER -p$$MYSQL_PASSWORD
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  #
+  # phpMyAdmin
+  #
+  database_admin:
+    container_name: database_admin
+    hostname: phpmyadmin
+    image: phpmyadmin
+    restart: always
+    volumes:
+      - phpmyadmin_data:/sessions
+    ports:
+      - 8080:80
+    environment:
+      TZ: Asia/Tokyo
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: ${DB_HOST}
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - backend
+    depends_on:
+      - database
+
+  #
+  # mailhog
+  #
+  mailhog:
+    container_name: smtp
+    platform: linux/amd64
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MAIL_HOST: smtp
+      MAIL_PORT: 1025
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - mail_data:/tmp
+    networks:
+      - backend
+
+networks:
+  backend: {}
+
+volumes:
+  database_data: null
+  phpmyadmin_data: null
+  mail_data: null
