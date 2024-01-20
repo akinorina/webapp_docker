@@ -54,22 +54,22 @@ services:
       - database
 
   #
-  # mailhog
+  # mailpit
   #
-  mailhog:
+  mailpit:
     container_name: smtp
-    platform: linux/amd64
-    image: mailhog/mailhog
+    image: axllent/mailpit
+    restart: always
+    volumes:
+      - mail_data:/data
     ports:
       - 8025:8025
       - 1025:1025
     environment:
-      MAIL_HOST: smtp
-      MAIL_PORT: 1025
-      MH_STORAGE: maildir
-      MH_MAILDIR_PATH: /tmp
-    volumes:
-      - mail_data:/tmp
+      MP_MAX_MESSAGES: 5000
+      MP_DATA_FILE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
     networks:
       - backend
 
