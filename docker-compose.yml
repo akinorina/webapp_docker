@@ -99,8 +99,27 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
     depends_on:
-      - database
-      - smtp
+      database:
+        condition: service_healthy
+      smtp:
+        condition: service_started
+
+  #
+  # reverse-proxy by Nginx
+  #
+  reverse-proxy:
+    container_name: reverse-proxy
+    image: nginx:1.25.3
+    build: ./reverse-proxy
+    ports:
+      - 8000:8000
+    volumes:
+      - ./reverse-proxy/log:/var/log/nginx
+    networks:
+      - backend
+    depends_on:
+      - backend-app
+  #   - nuxt
 
 networks:
   backend: {}
