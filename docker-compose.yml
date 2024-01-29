@@ -8,7 +8,7 @@ services:
   #
   database:
     container_name: database
-    hostname: ${DB_HOST}
+    hostname: ${DATABASE_HOST}
     image: mysql
     volumes:
       - database_data:/var/lib/mysql
@@ -17,10 +17,10 @@ services:
       - 3306:3306
     environment:
       TZ: Asia/Tokyo
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASS}
+      MYSQL_DATABASE: ${DATABASE_NAME}
     networks:
       - backend
     healthcheck:
@@ -45,9 +45,9 @@ services:
     environment:
       TZ: Asia/Tokyo
       PMA_ARBITRARY: 1
-      PMA_HOSTS: ${DB_HOST}
-      PMA_USER: ${DB_USERNAME}
-      PMA_PASSWORD: ${DB_PASSWORD}
+      PMA_HOSTS: ${DATABASE_HOST}
+      PMA_USER: ${DATABASE_USER}
+      PMA_PASSWORD: ${DATABASE_PASS}
     networks:
       - backend
     depends_on:
@@ -56,7 +56,7 @@ services:
   #
   # mailpit
   #
-  mailpit:
+  smtp:
     container_name: smtp
     image: axllent/mailpit
     restart: always
@@ -72,6 +72,35 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     networks:
       - backend
+
+  #
+  # server application
+  #
+  backend-app:
+    container_name: backend-app
+    build:
+      context: ../webapp_server_nestjs
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - backend
+    environment:
+      # Database (MySQL)
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASS: ${DATABASE_PASS}
+      DATABASE_NAME: ${DATABASE_NAME}
+      # SMTP
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    depends_on:
+      - database
+      - smtp
 
 networks:
   backend: {}
