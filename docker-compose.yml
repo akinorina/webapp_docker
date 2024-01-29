@@ -1,5 +1,5 @@
 #
-# docker-compose.docker.yml ( in docker on local )
+# docker-compose.yml
 #
 version: "3.9"
 services:
@@ -54,7 +54,7 @@ services:
       - database
 
   #
-  # mailpit
+  # SMTP by mailpit
   #
   smtp:
     container_name: smtp
@@ -74,7 +74,7 @@ services:
       - backend
 
   #
-  # server application
+  # server application by NestJS
   #
   backend-app:
     container_name: backend-app
@@ -105,6 +105,23 @@ services:
         condition: service_started
 
   #
+  # client application by Nuxt3
+  #
+  frontend-app:
+    container_name: frontend-app
+    build: ../webapp_client_nuxt3
+    ports:
+      - 4000:4000
+    environment:
+      TZ: Asia/Tokyo
+    networks:
+      - backend
+    tty: true
+    depends_on:
+      backend-app:
+        condition: service_started
+
+  #
   # reverse-proxy by Nginx
   #
   reverse-proxy:
@@ -118,8 +135,10 @@ services:
     networks:
       - backend
     depends_on:
-      - backend-app
-  #   - nuxt
+      backend-app:
+        condition: service_started
+      frontend-app:
+        condition: service_started
 
 networks:
   backend: {}
