@@ -140,6 +140,35 @@ services:
       frontend-app:
         condition: service_started
 
+  #
+  # https-portal
+  #
+  https-portal:
+    container_name: https-portal
+    hostname: https-portal
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    # restart: always
+    environment:
+      DOMAINS: '${DOMAIN} -> http://reverse-proxy:8000'
+      STAGE: ${STAGE}
+      CLIENT_MAX_BODY_SIZE: 5m
+      # FORCE_RENEW: true
+      CUSTOM_NGINX_SERVER_CONFIG_BLOCK: |
+        proxy_set_header Host $$host:$$proxy_port;
+        proxy_set_header X-Real-IP $$remote_addr;
+        proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $$scheme;
+    volumes:
+      - https-portal_data:/var/lib/https-portal
+    networks:
+      - backend
+    depends_on:
+      reverse-proxy:
+        condition: service_started
+
 networks:
   backend: {}
 
@@ -147,3 +176,4 @@ volumes:
   database_data: null
   phpmyadmin_data: null
   mail_data: null
+  https-portal_data: null
